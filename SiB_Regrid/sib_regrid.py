@@ -1,91 +1,26 @@
-"""functions and main-level script regrid Ian Baker's SiB output COS
-plant fluxes to the 124x124 60-km N Pole stereographic N American
-grid.
+"""regrid Ian Baker's SiB COS plant fluxes to 1-km Barcelona domain
 
-The module's top-level function is LRU_paper_main.
-
-The module contains a __main__ script that accepts LRU_paper_main
-parameters from the shell promt and runs LRU_paper_main.
+The module's top-level function is bcn_main.
 
 Examples:
      %python sib_regrid.py --help
      %python sib_regrid.py 2010 10
 
-.. note::
-    :mod:`sib_regrid` contains a number of python wrappers for
-    Models-3 I/O API shell tools (e.g. mtxcalc, mtxcple, m3wndw).  I
-    have since moved these wrappers to the package IOAPIpytools.  If
-    regridding data that isn't from SiB please use those, as they are
-    more general. I am not planning to take the time to refactor this
-    module to use IOAPIpytools.
-
-Author: Timothy W. Hilton, UC Merced, <thilton@ucmerced.edu>
+Author: Timothy W. Hilton, UC Santa Cruz, <twhilton@ucsc.edu>
 
 """
 
 import os
 import os.path
-import sys
 import subprocess
 import argparse
 from argparse import RawTextHelpFormatter
 
-from IOAPIpytools import ioapi_pytools
-
-def delete_if_exists(fname):
-    """remove a file if it exists, with a message to stdout.  Do
-    nothing if the file does not exist.
-
-    ARGS:
-        fname (string): full path to the file to be deleted
-    """
-    if os.path.exists(fname):
-        sys.stdout.write('removed {}\n'.format(fname))
-        sys.stdout.flush()
-        os.remove(fname)
+from timutils.io import delete_if_exists
+from IOAPIpytools.ioapi_pytools import calculate_regrid_matrix, run_regrid
 
 
-def calculate_regrid_matrix(fname_griddesc, fname_matrix, fname_mattxt,
-                            col_refinement=1000, row_refinement=1000):
-    """run mtxcalc (from the Models-3 I/O API) to calculate a regrid
-    matrix for a specified grid-to-grid transformation
-
-    ARGS:
-        fname_griddesc (string): full path to the Models-3 I/O API
-            GRIDDESC file to use for the regrid
-        fname_matrix: (string): full path to the matrix file to write
-            (see I/O API mtxcalc documentation)
-        fname_matrix: (string): full path to the mattxt file to write
-            (see I/O API mtxcalc documentation)
-        col_refinement (integer): col_refinement argument to pass to mtxcalc
-        row_refinement (integer): row_refinement argument to pass to mtxcalc
-
-    SEE ALSO:
-        `Models-3 I/O API mtxcalc documentation
-        <https://www.cmascenter.org/ioapi/documentation/3.1/html/MTXCALC.html>`_
-    """
-    os.environ['GRIDDESC'] = fname_griddesc
-    os.environ['MATRIX'] = fname_matrix
-    os.environ['MATTXT'] = fname_mattxt
-    os.environ['COL_REFINEMENT'] = "{}".format(col_refinement)
-    os.environ['ROW_REFINEMENT'] = "{}".format(row_refinement)
-    if (os.path.exists(fname_matrix) and os.path.exists(fname_mattxt)):
-        sys.stdout.write('{} and {} already exist; '
-                         'mtxcalc was not run.\n'.format(
-                             fname_matrix, fname_mattxt))
-        sys.stdout.flush()
-    else:
-        cmd = ("mtxcalc << DONE\n"
-               "Y\n"
-               "SiB_grid\n"
-               "ARCNAGRID"
-               "\n"
-               "MATTXT\n"
-               "DONE\n")
-        subprocess.call(cmd, shell=True)
-
-
-def create_IOAPI_file(fname_in, fname_out, year, month):
+def create_IOAPI_file(fname_in, fname_out, year, month, fname_griddesc):
     """run fortran program SiB_2_IOAPI.F90 to create Models-3 I/O API file from
     SiB COS plant fluxes.
 
@@ -103,87 +38,11 @@ def create_IOAPI_file(fname_in, fname_out, year, month):
     """
     os.environ['RAW_SIB_FILE'] = fname_in
     os.environ['OUTPUT'] = fname_out
+    os.environ['GRIDDESC'] = fname_griddesc
     subprocess.call('make -f SiB_2_IOAPI.mk', shell=True)
     delete_if_exists(fname_out)
     subprocess.call('./SiB_2_IOAPI.x {} {}'.format(year, month), shell=True)
 
-
-def window_to_NorthAmerica(fname_in, fname_out):
-    """window SiB I/O API file to one quarter of the globe.
-
-    uses the Models-3 I/O API utility m3wndw to extract the SiB COS
-    plant fluxes that are North of the equator and between 0 W and 180
-    W longitude.  Considering this subset of f the global data set
-    speeds calculation of the regridding matrix considerably.
-
-    ARGS:
-        fname_in (string): full path to the global SiB Models-3 I/O
-            API file
-        fname_out (string): full path for the windowed Models-3
-            I/O API file to create.  fname_out is overwritten if it
-            exists.
-
-    SEE ALSO:
-        `Models-3 I/O API mtxcalc documentation
-        <https://www.cmascenter.org/ioapi/documentation/3.1/html/MTXCALC.html>`_
-    """
-    os.environ['INFILE'] = fname_in
-    os.environ['OUTFILE'] = fname_out
-    delete_if_exists(fname_out)
-    print 'running m3wndw'
-    subprocess.call('m3wndw << DONE\n'
-                    '\n'
-                    '\n'
-                    '\n'
-                    '\n'
-                    'SiB_grid_NA\n'
-                    '\n'
-                    'DONE',
-                    shell=True)
-
-
-def run_regrid(fname_raw, fname_regridded, fname_matrix, fname_mattxt):
-    """calculated regridded SiB plant fluxes.
-
-    Use Models-3 I/O API mtxcple routine to calculate regridded SiB
-    COS plant fluxes from an existing I/O API data file and a
-    pre-calculated regridding matrix.
-
-    ARGS:
-        fname_raw (string): full path for the Models-3 I/O API data
-            file containing SiB plant fluxes on the source grid.
-        fname_regridded (string): full path for the regridded SiB
-            plant flux Models-3 I/O API file to create.
-            fname_regridded is overwritten if it exists.
-        fname_matrix (string): full path for the matrix file (see
-            calculate_regrid_matrix)
-        fname_mattxt (string): full path for the mattxt file (see
-            calculate_regrid_matrix)
-
-    SEE ALSO:
-        `Models-3 I/O API mtxcalc documentation
-        <https://www.cmascenter.org/ioapi/documentation/3.1/html/MTXCPLE.html>`_
-
-    """
-    os.environ['IN_DATA'] = fname_raw
-    os.environ['OUT_DATA'] = fname_regridded
-    os.environ['MATRIX_FILE'] = fname_matrix
-    os.environ['FRACTIONS'] = fname_mattxt
-
-    delete_if_exists(fname_regridded)
-    subprocess.call('mtxcple << DONE\n'
-                    'Y\n'
-                    'NONE\n'
-                    '\n'
-                    '\n'
-                    '\n'
-                    '\n'
-                    '\n'
-                    '\n'
-                    '\n'
-                    '\n'
-                    'DONE\n',
-                    shell=True)
 
 
 def create_fCOS_IOAPI(fname_regridded,
@@ -274,7 +133,7 @@ def create_fCOS_IOAPI(fname_regridded,
                     shell=True)
 
 
-def LRU_paper_main(year, month, skip_regrid=False, skip_post_process=False):
+def bcn_main(year, month, skip_regrid=False, skip_post_process=False):
     """main function for module sib_regrid
 
     creates two new I/O API files from 'native' 2.5 by 2.0 degree SiB
@@ -287,7 +146,7 @@ def LRU_paper_main(year, month, skip_regrid=False, skip_post_process=False):
     leaf-scale relative uptake (LRU) of 1.61 and a COS/CO2 ratio of
     1.1.
 
-    The 'native' SiB files are monthly; thus LRU_paper_main takes the
+    The 'native' SiB files are monthly; thus bcn_main takes the
         year and month of the SiB file to process as arguments.
 
     ARGS:
@@ -299,29 +158,28 @@ def LRU_paper_main(year, month, skip_regrid=False, skip_post_process=False):
         skip_post_process (True | {False}): if True, do not
             postprocess the regridded fluxes into fCOS files for STEM.
     """
-    fname_griddesc = './GRIDDESCSiB.txt'
-    fname_mattxt = './SiB_to_NA60kmmattxt.txt'
-    fname_matrix = './SiB_to_NA60kmmatrix.txt'
-    fname_SiB_raw = os.path.join(os.getenv('HOME'),
-                                 'SiB_Restore_2016-03-18',
-                                 'flux_hourly_{}{:02}p001.nc'.format(
-                                     year, month))
+    fname_griddesc = '/nfs/pic.es/user/t/thilton/Code/Barcelona/GRIDDESC_BCN'
+    fname_mattxt = './SiB_to_1kmBCN_mattxt.txt'
+    fname_matrix = './SiB_to_1kmBCN_matrix.txt'
+    fname_SiB_raw = os.path.join(
+        '/software', 'co2flux', 'SurfaceFluxData', 'SIB',
+        'flux_hourly_{}{:02}p001.nc'.format(year, month))
     fname_ioapi = 'SiB_{}{:02}_1.25x1.0_IOAPI.nc'.format(
         year, month)
-    fname_regridded = 'SiB_{}{:02}_124x124_IOAPI.nc'.format(
+    fname_regridded = 'SiB_{}{:02}_1kmBCN.nc'.format(
         year, month)
-    fname_COS_SiBmech = 'SiB_{}{:02}_124x124_COS_mechanistic.nc'.format(
+    fname_COS_SiBmech = 'SiB_{}{:02}_1kmBCN_mechanistic.nc'.format(
         year, month)
-    fname_COS_SiBcalc = 'SiB_{}{:02}_124x124_COS_calculated.nc'.format(
+    fname_COS_SiBcalc = 'SiB_{}{:02}_1kmBCN_calculated.nc'.format(
         year, month)
-    fname_GPP = 'SiB_{}{:02}_124x124_GPP.nc'.format(
+    fname_GPP = 'SiB_{}{:02}_1kmBCN_GPP.nc'.format(
         year, month)
 
-    print fname_ioapi
-    print fname_regridded
-    print fname_COS_SiBmech
-    print fname_COS_SiBcalc
-    print fname_GPP
+    print(fname_ioapi)
+    print(fname_regridded)
+    print(fname_COS_SiBmech)
+    print(fname_COS_SiBcalc)
+    print(fname_GPP)
 
     if skip_regrid is False:
         # --------------------------------------------------
@@ -329,65 +187,66 @@ def LRU_paper_main(year, month, skip_regrid=False, skip_post_process=False):
         # subsampling; this results in 1e4 samples per 1.25 degree by 1
         # degree area.
 
-        calculate_regrid_matrix(fname_griddesc, fname_matrix, fname_mattxt,
-                                col_refinement=1000, row_refinement=1000)
+        # calculate_regrid_matrix(fname_griddesc, fname_matrix, fname_mattxt,
+        #                         col_refinement=1000, row_refinement=1000)
         # --------------------------------------------------
 
         create_IOAPI_file(fname_in=fname_SiB_raw,
                           fname_out=fname_ioapi,
                           year=year,
-                          month=month)
+                          month=month,
+                          fname_griddesc=fname_griddesc)
 
-        run_regrid(fname_ioapi, fname_regridded, fname_matrix, fname_mattxt)
+    #     run_regrid(fname_ioapi, fname_regridded, fname_matrix, fname_mattxt)
 
-    if skip_post_process is False:
-        m2_per_gridcell = 6e4 * 6e4  # STEM grid cells are 60 km by 60 km
-        mols_per_umol = 1e-6  # moles per micromole
-        create_fCOS_IOAPI(fname_regridded,
-                          fname_COS_SiBmech,
-                          in_varname='OCS_gpp',
-                          units_factor=(-1.0 * (1 / m2_per_gridcell) *
-                                        mols_per_umol),
-                          new_units='mol m-2 s-1',
-                          new_desc=('SiB mechanistic COS plant flux regridded '
-                                    'to 124x124 N American grid for STEM'))
+    # if skip_post_process is False:
+    #     m2_per_gridcell = 6e4 * 6e4  # STEM grid cells are 60 km by 60 km
+    #     mols_per_umol = 1e-6  # moles per micromole
+    #     create_fCOS_IOAPI(fname_regridded,
+    #                       fname_COS_SiBmech,
+    #                       in_varname='OCS_gpp',
+    #                       units_factor=(-1.0 * (1 / m2_per_gridcell) *
+    #                                     mols_per_umol),
+    #                       new_units='mol m-2 s-1',
+    #                       new_desc=('SiB mechanistic COS plant flux regridded '
+    #                                 'to 124x124 N American grid for STEM'))
 
-        LRU = 1.61
-        COS_CO2_ratio = 1.1
-        umol_per_pmol = 1e-6
-        # SiB GPP is umol m-2 s-1.  To calculate fCOS in mol m-2 s-1 I
-        # need mols_per_umol to take micromoles CO2 GPP to moles CO2
-        # GPP *and* umol_per_pmol to cancel out the pmol COS per umol
-        # CO2 in the units of LRU.
-        create_fCOS_IOAPI(fname_regridded,
-                          fname_COS_SiBcalc,
-                          in_varname='GPP',
-                          units_factor=(-1.0 * (1 / m2_per_gridcell) *
-                                        mols_per_umol * umol_per_pmol *
-                                        LRU * COS_CO2_ratio),
-                          new_units='mol m-2 s-1',
-                          new_desc=('COS Fplant from SiB CO2 GPP, '
-                                    '124x124 N American '
-                                    'grid, LRU=1.61, [COS]/[CO2]=1.1'))
+    #     LRU = 1.61
+    #     COS_CO2_ratio = 1.1
+    #     umol_per_pmol = 1e-6
+    #     # SiB GPP is umol m-2 s-1.  To calculate fCOS in mol m-2 s-1 I
+    #     # need mols_per_umol to take micromoles CO2 GPP to moles CO2
+    #     # GPP *and* umol_per_pmol to cancel out the pmol COS per umol
+    #     # CO2 in the units of LRU.
+    #     create_fCOS_IOAPI(fname_regridded,
+    #                       fname_COS_SiBcalc,
+    #                       in_varname='GPP',
+    #                       units_factor=(-1.0 * (1 / m2_per_gridcell) *
+    #                                     mols_per_umol * umol_per_pmol *
+    #                                     LRU * COS_CO2_ratio),
+    #                       new_units='mol m-2 s-1',
+    #                       new_desc=('COS Fplant from SiB CO2 GPP, '
+    #                                 '124x124 N American '
+    #                                 'grid, LRU=1.61, [COS]/[CO2]=1.1'))
 
-        ioapi_pytools.ioapi_const_multiply(
-            fname_regridded,
-            fname_GPP,
-            in_varname='GPP',
-            out_varname='GPP',
-            constant_factor=((1 / m2_per_gridcell) *
-                             mols_per_umol),
-            new_units='mol m-2 s-1',
-            new_desc=('CO2 GPP from SiB, '
-                      '124x124 N American grid'))
+    #     ioapi_pytools.ioapi_const_multiply(
+    #         fname_regridded,
+    #         fname_GPP,
+    #         in_varname='GPP',
+    #         out_varname='GPP',
+    #         constant_factor=((1 / m2_per_gridcell) *
+    #                          mols_per_umol),
+    #         new_units='mol m-2 s-1',
+    #         new_desc=('CO2 GPP from SiB, '
+    #                   '124x124 N American grid'))
 
 
-        delete_if_exists(fname_ioapi)
-        delete_if_exists(fname_regridded)
+        # delete_if_exists(fname_ioapi)
+        # delete_if_exists(fname_regridded)
 
 
 if __name__ == "__main__":
-    """ parse command line arguments and pass them to LRU_paper_main.
+    """ parse command line arguments and pass them to bcn_main.
 
     Examples:
         %python sib_regrid.py --help
@@ -421,7 +280,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     # --------------------------------------------------
 
-    LRU_paper_main(args.year,
+    bcn_main(args.year,
                    args.month,
                    args.skip_regrid,
                    args.skip_post_process)
