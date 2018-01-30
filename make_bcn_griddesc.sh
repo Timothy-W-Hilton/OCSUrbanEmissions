@@ -32,8 +32,8 @@ EOF
 rm -fv $TMP_WRFOUT
 
 # now add description of the native SiB grid into the GRIDDESC file
-awk -v n=2 -v s=" 'LAT_LON'\n     1\t0.0D0\t0.0D0\t0.0D0\t0.0D0\t0.0D0" 'NR == n {print s} {print}' GRIDDESC_BCN > tmp_out
-awk -v n=17 -v s=" 'SIB_NATIVE'\n 'LATLON' -180, -90, 1.25, 1., 288, 180, 1" 'NR == n {print s} {print}' tmp_out > tmp_out2
+awk -v n=2 -v s=" 'LAT_LON'\n     1,0.0D0, 0.0D0, 0.0D0, 0.0D0, 0.0D0" 'NR == n {print s} {print}' GRIDDESC_BCN > tmp_out
+awk -v n=17 -v s=" 'SIB_NATIVE'\n 'LAT_LON' -180, -90, 1.25, 1., 288, 180, 1" 'NR == n {print s} {print}' tmp_out > tmp_out2
 
 # clean up
 rm -f tmp_out

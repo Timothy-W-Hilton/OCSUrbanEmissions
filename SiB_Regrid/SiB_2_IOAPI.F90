@@ -294,7 +294,7 @@ CONTAINS
     LOGDEV = INIT3()
 
     ! read grid parameters from GRIDDESC
-    status = DSCGRID( 'SiB_grid', GDNAM3D, &
+    status = DSCGRID( 'SIB_NATIVE', GDNAM3D, &
          & GDTYP3D, P_ALP3D, P_BET3D, P_GAM3D, XCENT3D, YCENT3D, &
          & XORIG3D, YORIG3D, XCELL3D, YCELL3D, NCOLS3D, NROWS3D, NTHIK3D )
 
