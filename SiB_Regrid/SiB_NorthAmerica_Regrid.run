@@ -1,0 +1,52 @@
+#!/usr/bin/csh
+# ---------------------------------------------------
+# -------- Torque batch job scheduler setup
+# ---------------------------------------------------
+
+#SBATCH -p regular
+
+#--TWH   NERSC recommends always setting mppwidth to a multiple of 24
+#--TWH   (https://www.nersc.gov/users/computational-systems/hopper/running-jobs/aprun/);
+#--TWH   using 24 restricts us to one node. Usage is charged per node, so this
+#--TWH   is the most economical way to run the main function.
+#SBATCH -n 24
+
+#--TWH   restrict the main function to a max of one minute of walltime
+#PBS -l walltime=08:00:00
+
+#--TWH   define a descriptive jobname
+setenv JOBNAME SiB_regrid
+echo "JOBNAME: $JOBNAME"
+
+#--TWH   run from the directory from which qsub was run
+cd $SLURM_SUBMIT_DIR
+
+#--TWH   set up modules
+module load python/2.7-anaconda
+module load cray-netcdf/4.3.3.1
+# activate anaconda environment -- these instructions found here:
+# http://www.bu.edu/tech/support/research/software-and-programming/common-languages/python/python-versions/
+# ============================================================
+# Activating an Environment in csh/tcsh
+
+# In csh the activate script is not available, so you simply add the
+# environment bin directory to your PATH environment variable. Where’s
+# the environment installed? You can find the path printed next to the
+# name in the output of a call to ‘conda info -e’ or when you create a
+# new enviroment (more about this below) you’ll see a message in the
+# output similar to the following:
+
+# Package plan for installation in environment
+# /usr1/scv/yannpaul/anaconda_envs/py3 So you would want to add
+# /usr1/scv/yannpaul/anaconda_envs/py3/bin to your PATH environment
+# variable:
+
+# scc1% setenv PATH /usr1/scv/yannpaul/anaconda_envs/py3/bin:$PATH
+# ============================================================
+setenv PATH /global/homes/t/twhilton/.conda/envs/tim_anaconda_env_cori/bin:$PATH
+# source activate tim_anaconda_env_cori  # doesn't work in csh
+
+#--TWH   do the conversions
+echo "calculating SiB --> N America regrid matrices"
+python RunDriver_SiB_regrid.py
+echo "finished regridding"

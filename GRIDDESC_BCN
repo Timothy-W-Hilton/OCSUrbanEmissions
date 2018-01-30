@@ -1,0 +1,15 @@
+ !  coords --line:  name; type,  P-alpha, P-beta, P-gamma, xcent, ycent
+ 'CRD_BCND01'
+     2    3.0000000D+01    6.0000000D+01    5.0000000D+00    5.0000000D+00    5.0000000D+01
+  
+ ' ' !  end coords.  grids:  name; xorig, yorig, xcell, ycell, ncols, nrows, nthik
+  
+ 'CRO_BCND01'
+ 'CRD_BCND01'  -2.7091480E+06  -2.7091475E+06  -5.7560719E+04  -5.7560719E+04    74    74     1
+ 'DOT_BCND01'
+ 'CRD_BCND01'  -2.6803677E+06  -2.6803672E+06  -5.7560719E+04  -5.7560719E+04    75    75     1
+ 'STX_BCND01'
+ 'CRD_BCND01'  -2.6803677E+06  -2.7091475E+06  -5.7560719E+04  -5.7560719E+04    75    74     1
+ 'STY_BCND01'
+ 'CRD_BCND01'  -2.7091480E+06  -2.6803672E+06  -5.7560719E+04  -5.7560719E+04    74    75     1
+ ' ' !  end grids
