@@ -141,7 +141,7 @@ CONTAINS
     END DO
 
     DEALLOCATE(arr2d)
-
+    sib_var%desc=''   ! gfortran fills with junk if not initialized
     sib_var%name = varname
     nf_status = NF_get_att_text(ncid, vid, 'units', sib_var%units)
     nf_status = NF_get_att_text(ncid, vid, 'long_name', sib_var%desc)
@@ -392,7 +392,7 @@ PROGRAM SiB_to_IOAPI
   print *, year, month
 
   ! fname = '/home/ecampbell_lab/COS/Additional_Flux_Models/SiB_From_Ian_2015-03/flux_hourly_200808p001.nc'
-  CALL ENVSTR('RAW_SIB_FILE', 'infile: the SiB file to process',
+      CALL ENVSTR('RAW_SIB_FILE', 'infile: the SiB file to process', &
      & './default.nc', fname, ierr)
   IF (ierr .NE. 0) THEN
      print *, 'unable to obtain RAW_SIB_FILE physical file'
