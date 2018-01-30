@@ -392,7 +392,8 @@ PROGRAM SiB_to_IOAPI
   print *, year, month
 
   ! fname = '/home/ecampbell_lab/COS/Additional_Flux_Models/SiB_From_Ian_2015-03/flux_hourly_200808p001.nc'
-  CALL ENVSTR('RAW_SIB_FILE', 'infile: the SiB file to process', './default.nc', fname, ierr)
+  CALL ENVSTR('RAW_SIB_FILE', 'infile: the SiB file to process',
+     & './default.nc', fname, ierr)
   IF (ierr .NE. 0) THEN
      print *, 'unable to obtain RAW_SIB_FILE physical file'
      STOP
