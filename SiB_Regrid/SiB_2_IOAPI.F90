@@ -261,7 +261,8 @@ CONTAINS
     REAL, ALLOCATABLE, DIMENSION(:, :, :, :) :: area, pct
     REAL, ALLOCATABLE, DIMENSION(:, :, :) :: tmp3d
     REAL :: cell_EW, cell_NS
-    INTEGER status, ierr, dimid, nlon, nlat, ntimes
+    LOGICAL status
+    INTEGER ierr, dimid, nlon, nlat, ntimes
     INTEGER i, j, LOGDEV, this_var, this_t
     INTEGER jdate, jtime, this_date, this_time
 
