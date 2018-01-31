@@ -430,10 +430,6 @@ C     compute NSEASON to summer, early fall, later fall, winter and transitional
        nflag=close3('HEIGHT3D')
 
        print*, 'sigmaf =',sigmaf
-       print*,'sample z at (70,30)=',z(70,30,1:kmax)
-       print*,'sample zfull at (70,30)=',zfull(70,30,1:kmax+1)
-       print*,'sample Pstate at (70,30)=',pstate(70,30,1:kmax)
-       print*,'sample pfull at (70,30)=',pfull(70,30,1:kmax+1)
 
 C---2D meteorological file head, include dust and sea salt emission
       nlays3d=1
@@ -1042,14 +1038,6 @@ c       enddo
 
        mtime=mtime+1
        hour = hour+1
-      s=(data2din(150,150,in_rain1)+
-     1 data2din(150,150,in_rain2))
-      print*, 'ACTUAL rain :', s
-      print*, 'RELOAD rainold:',rainold(150,150)
-      print*, 'ACTUAL step :', wrftstep
-      s= (s-rainold(150,150))/wrftstep
-      print*, 'ACTUAL prate1 :', s
-      print*, 'ACTUAL prate :', prate(150,150)
 
       do i=1,imaxout
        ii=i+ioff
