@@ -67,7 +67,8 @@ C-------------------------------------------------------------------------------
      m glw(imaxout,jmaxout)
 
       real rwlocal(kmax),cwlocal(kmax),rhlocal(kmax),zlocal(kmax),
-     1 plocal(kmax),tlocal(kmax),qlocal(kmax),cldlocal(kmax)
+     & plocal(kmax),tlocal(kmax),qlocal(kmax),cldlocal(kmax),
+     &     zsigmaf(kmax+1)
 
       real  data3din(imax,jmax,kmax+1,invar3d),   ! the lowest layer is used for computing surfacr property
      1 sigmaf(kmax+1),data2din(imax,jmax,invar2d),fland(nusgs,2),
@@ -75,7 +76,7 @@ C-------------------------------------------------------------------------------
 
       real, allocatable, dimension (:,:,:) :: tsoilin, smoisin
 
-      common /surface/zfull,z,t,u,v,p,qv,prate,sigmaf   ! common block for bdrydep     
+      common /surface/zfull,z,t,u,v,p,qv,prate,zsigmaf,sigmaf   ! common block for bdrydep     
 
       logical wdiog,cdiog,first,timematch,debug1,initialfile
       data debug1/.false./
@@ -1174,7 +1175,7 @@ C-- PBLMIN: FLOOR OF PBL IS LIMITED BY THE TOP OF 1ST LAYER
 C-- PBLMAX: CEILING OF PBL HEIGHT IS KEPT AT THE TOP OF 8-TH LAYER
 COF THE 15-LAYER MM-4 LAYERS
 C*********************************************************************
-      PARAMETER (NLEV=1,NLEVMAX=3,imax=236,jmax=216,KMAX=34, !imax and jmax is equal to  imaxout and jmaxout at main model
+      PARAMETER (NLEV=1,NLEVMAX=3,imax=50,jmax=50,KMAX=59, !imax and jmax is equal to  imaxout and jmaxout at main model
      1 lduc=11,numsea=5,  ! lduc is landuse category
      2 LTOTG=16,LDDEP=16)
 
@@ -1208,9 +1209,9 @@ C
      2 z(imax,jmax,kmax),t(imax,jmax,kmax),
      3 u(imax,jmax,kmax),v(imax,jmax,kmax),
      4 p(imax,jmax,kmax),qv(imax,jmax,kmax),
-     5 prate(imax,jmax),zsigmaf(kmax+1)
+     5 prate(imax,jmax),zsigmaf(kmax+1),sigmaf(kmax+1)
 
-      common /surface/zfull,z,t,u,v,p,qv,prate,zsigmaf
+      common /surface/zfull,z,t,u,v,p,qv,prate,zsigmaf,sigmaf
 
       DATA PBLMIN /50.0/, KPBLMAX /10/, KPBLMIN /1/, ZREF /10./
      1    ,BETAM /4.7/, BETAH /6.35/, G/9.8/, EOMEGA /7.29E-5/
