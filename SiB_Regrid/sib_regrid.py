@@ -159,14 +159,14 @@ def bcn_main(year, month, skip_regrid=False, skip_post_process=False):
             postprocess the regridded fluxes into fCOS files for STEM.
     """
     fname_griddesc = '/nfs/pic.es/user/t/thilton/Code/Barcelona/GRIDDESC_BCN'
-    fname_mattxt = './SiB_to_1kmBCN_mattxt.txt'
-    fname_matrix = './SiB_to_1kmBCN_matrix.txt'
+    fname_mattxt = './SiB_to_1kmBCN_mattxt_100100.txt'
+    fname_matrix = './SiB_to_1kmBCN_matrix_100100'
     fname_SiB_raw = os.path.join(
         '/software', 'co2flux', 'SurfaceFluxData', 'SIB',
         'flux_hourly_{}{:02}p001.nc'.format(year, month))
     fname_ioapi = 'SiB_{}{:02}_1.25x1.0_IOAPI.nc'.format(
         year, month)
-    fname_regridded = 'SiB_{}{:02}_1kmBCN.nc'.format(
+    fname_regridded = 'SiB_{}{:02}_1kmBCN_100100.nc'.format(
         year, month)
     fname_COS_SiBmech = 'SiB_{}{:02}_1kmBCN_mechanistic.nc'.format(
         year, month)
@@ -183,21 +183,23 @@ def bcn_main(year, month, skip_regrid=False, skip_post_process=False):
 
     if skip_regrid is False:
         # --------------------------------------------------
-        # Calculate grid-to-grid transform matrix.  Use 1000 by 1000
-        # subsampling; this results in 1e4 samples per 1.25 degree by 1
+        # Calculate grid-to-grid transform matrix.  Use 100 by 100
+        # subsampling; this results in 100 samples per 1.25 degree by 1
         # degree area.
 
-        # calculate_regrid_matrix(fname_griddesc, fname_matrix, fname_mattxt,
-        #                         col_refinement=1000, row_refinement=1000)
+        calculate_regrid_matrix(fname_griddesc, fname_matrix, fname_mattxt,
+                                in_grid='SIB_NATIVE',
+                                out_grid='CRO_BCND04',
+                                col_refinement=10, row_refinement=10)
         # --------------------------------------------------
 
-        create_IOAPI_file(fname_in=fname_SiB_raw,
-                          fname_out=fname_ioapi,
-                          year=year,
-                          month=month,
-                          fname_griddesc=fname_griddesc)
+        # create_IOAPI_file(fname_in=fname_SiB_raw,
+        #                   fname_out=fname_ioapi,
+        #                   year=year,
+        #                   month=month,
+        #                   fname_griddesc=fname_griddesc)
 
-    #     run_regrid(fname_ioapi, fname_regridded, fname_matrix, fname_mattxt)
+        run_regrid(fname_ioapi, fname_regridded, fname_matrix, fname_mattxt)
 
     # if skip_post_process is False:
     #     m2_per_gridcell = 6e4 * 6e4  # STEM grid cells are 60 km by 60 km
