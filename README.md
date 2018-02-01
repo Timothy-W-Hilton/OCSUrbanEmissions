@@ -6,7 +6,7 @@ This repository contains code developed for the urban carbon dioxide flux experi
 
 Broadly, the code here performs four tasks, all of which either pre- or post-process data for/from the [Sulfur Transport and dEposition Model (STEM)](https://github.com/Timothy-W-Hilton/STEM).  STEM source code is not included here, but is [also on Github](https://github.com/Timothy-W-Hilton/STEM).  The STEM code that is edited to compile with [gfortran](https://gcc.gnu.org/fortran/) at [PIC](https://www.pic.es) is in the [branch GNU_compilers](https://github.com/Timothy-W-Hilton/STEM/tree/GNU_compilers).
 
-The code is divided into four subdirectories: LivermorePlotting, make_GRIDDESC, Preprocessor, and SiB_Regrid.  Their contents are described below.  Each subdirectory contains a readme file with further details about its functioning.
+The code is divided into four subdirectories: LivermorePlotting, make_GRIDDESC, Preprocessor, and SiB_Regrid.  Their contents are described below.  Each subdirectory contains a readme file with further information.
 
 #### STEM pre-processing tasks performed ####
 1) build a [EDSS/Models-3 I/O API](https://www.cmascenter.org/ioapi/documentation/all_versions/html/index.html) GRIDDESC file for a 1-km resolution domain around Barcelona, Spain from WRF output.  See subdirectory make_GRIDDESC/.
