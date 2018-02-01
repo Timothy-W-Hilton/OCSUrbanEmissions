@@ -1,6 +1,7 @@
 SHELL=/bin/sh
 
 PROGRAM=preprocessor_1km
+TOPO=wrf_to_topo2
 
 FC=gfortran
 LD=gfortran
@@ -11,19 +12,24 @@ APINCL=-I/usr/include -I/software/co2flux/LIBRARIES/netcdf-3.6.3/include -I/nfs/
 APILIB=-L/usr/lib64 -L/nfs/pic.es/user/t/thilton/Software/ioapi-3.2_tim/Linux2_x86_64gfort -L$(PWD) -lioapi -L/software/co2flux/LIBRARIES/netcdf-3.6.3/lib -lnetcdf
 
 CMD=$(PROGRAM).x
+TOPOCMD=$(TOPO).x
 SRCDRV=$(PROGRAM).F90
 OBJDRV=$(PROGRAM).o
 
-all:  	$(CMD)
+all:  	$(CMD) $(TOPOCMD)
 
 $(CMD):	$(OBJDRV)
 	$(LD) $(LDFLAGS) -o $(CMD) $(OBJDRV) \
 	$(APILIB)
 
+$(TOPOCMD):	$(TOPO).o
+	$(LD) $(LDFLAGS) -o $(TOPOCMD) $(TOPO).o \
+	$(APILIB)
+
 f.o:
 	$(FC) $(FFLAGS) $(APINCL) $<
 
-f90.o:
+$(TOPO).o:	$(TOPO).f90
 	$(FC) $(FFLAGS) $(APINCL) $<
 
 clean:
