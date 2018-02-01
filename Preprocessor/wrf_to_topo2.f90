@@ -1,11 +1,16 @@
-
+!--------------------------------------------------
+!REQUIREMENTS
+!EDSS/Models-3 I/O API logical names WRF_FILE and OUTPUT must be set.
+!WRF_FILE should point to the WRF output file to be converted to a
+!TOPO file.  OUTPUT should point to the TOPO file to create.
+!
+!
+!--------------------------------------------------
 program wrf_to_ioapi
-   use netcdf
-   implicit none
-   include 'netcdf.inc'
-   include 'PARMS3.EXT'	! i/o API
-   include 'FDESC3.EXT'	! i/o API
-   include 'IODECL3.EXT'	! i/o API
+      USE M3UTILIO
+      USE NETCDF
+      IMPLICIT NONE
+
 
    ! variables list
    CHARACTER(len=255) :: infile
