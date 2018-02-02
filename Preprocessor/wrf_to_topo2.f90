@@ -28,15 +28,30 @@
       real, DIMENSION(:,:), ALLOCATABLE :: MF
       INTEGER, DIMENSION(:,:), ALLOCATABLE :: LU
       logical log_stat
+      integer i_stat
 
       print*, '---------------checking environment:   '
-      CALL get_environment_variable("WRF_FILE", infile)
-      CALL get_environment_variable("OUTPUT",outfile)
-      CALL get_environment_variable("GRIDDESC",griddesc)
-      CALL get_environment_variable("GRIDNAME",gridname)
+!     TODO: use I/O API GETSTR() to get these variables.  This allows
+!     for stopping the program if the variable is not set.
+      CALL envstr('WRF_FILE', 'logical name of WRFOUT file', "BADVAL", &
+     &     infile, i_stat)
+      CALL envstr_check(i_stat, 'WRF_FILE')
+
+      CALL envstr("OUTPUT", 'logical name of TOPO file', 'BADVAL', &
+     &     outfile, i_stat)
+      CALL envstr_check(i_stat, 'OUTPUT')
+
+      CALL envstr("GRIDDESC", 'logical name of GRIDDESC file', 'BADVAL', &
+     &     griddesc, i_stat)
+      CALL envstr_check(i_stat, 'GRIDDESC')
+
+      CALL envstr("GRIDNAME", 'name of grid to read from GRIDDESC', &
+     &     'BADVAL', gridname, i_stat)
+      CALL envstr_check(i_stat, 'GRIDNAME')
       WRITE (*,*) TRIM(infile)
       WRITE (*,*) TRIM(outfile)
       WRITE (*,*) TRIM(griddesc)
+      WRITE (*,*) TRIM(gridname)
       print*,"infile###############",infile
 
       log_stat = DSCGRID( gridname, GDNAM3D, GDTYP3D, P_ALP3D, &
@@ -194,7 +209,10 @@
 
 
       contains
+
+!--------------------------------------------------
       subroutine check(status)
+      IMPLICIT NONE
       integer, intent ( in) :: status
 
       if(status /= nf90_noerr) then
@@ -202,4 +220,26 @@
          stop "Stopped"
       end if
       end subroutine check
+
+!--------------------------------------------------
+      subroutine envstr_check(status, varname)
+!     check the status argument from envstr and print a useful error
+!     message if the variable was not properly set
+      IMPLICIT NONE
+      integer, intent(in) :: status
+      CHARACTER(*), intent(in) :: varname
+
+      if (status .EQ. 1) then
+         print *, varname, 'improperly formatted'
+         stop
+      elseif (status .EQ. -1) then
+         print *, varname, 'empty'
+         stop
+      elseif (status .EQ. -2) then
+         print *, varname, 'not set'
+         stop
+      endif
+
+      end subroutine envstr_check
+!--------------------------------------------------
       end program wrf_to_topo
