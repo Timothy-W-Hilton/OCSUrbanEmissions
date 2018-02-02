@@ -11,7 +11,8 @@ C-------------------------------------------------------------------------------
       include 'netcdf.inc'
 
       logical iflag_log, nflag
-      integer imax, jmax, kmax, invar2d, invar3d, imaxout, jmaxout,
+      integer imax, jmax, kmax, invar2d, invar3d, logunit,
+     &     imaxout, jmaxout,
      &     kmaxout, ndspecies, nusgs,
      &     imaxstag, jmaxstag, kmaxstag, LDUC, ioff, joff, koff,
      &     nratio, dimid, i, j, k, id_ntime, id_times, id_znu, id_znw,
@@ -144,7 +145,8 @@ c --- end WORK_AREAS declarations
 
 
 c------read in latitude, longitude, topographj and landuse of grids
-      if(.not.open3('TOPO',FSREAD3,'epscreat')) then
+      logunit = INIT3()
+      if(.not.open3('TOPO',FSREAD3,'preprocessor')) then
        print*, 'failed to open TOPO'
        stop
       endif
