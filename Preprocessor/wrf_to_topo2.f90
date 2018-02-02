@@ -1,10 +1,12 @@
 !--------------------------------------------------
 !     REQUIREMENTS
-!     EDSS/Models-3 I/O API logical names WRF_FILE, OUTPUT, and GRIDDESC must
-!     be set.  WRF_FILE should point to the WRF output file to be converted
-!     to a TOPO file.  OUTPUT should point to the TOPO file to create.
+!     EDSS/Models-3 I/O API logical names WRF_FILE, OUTPUT, and
+!     GRIDDESC, GRIDNAME must be set.  WRF_FILE should point to the WRF
+!     output file to be converted to a TOPO file.  OUTPUT should point
+!     to the TOPO file to create.  GRIDNAME should contain the name of
+!     the grid in the GRIDDESC file to create a TOPO file for.
 !--------------------------------------------------
-      program wrf_to_ioapi
+      program wrf_to_topo
       USE M3UTILIO
       USE NETCDF
       IMPLICIT NONE
@@ -14,6 +16,7 @@
       CHARACTER(len=255) :: infile
       CHARACTER(len=255) :: outfile
       CHARACTER(len=255) :: griddesc
+      CHARACTER(len=16) :: gridname
       integer::LOGDEV
       integer::jdate,jtime      !integers used for TFLAG during write
       integer::ncid, xlatid, xlonid, hgtid, MFid, LUid !netcdf variable id's
@@ -30,12 +33,13 @@
       CALL get_environment_variable("WRF_FILE", infile)
       CALL get_environment_variable("OUTPUT",outfile)
       CALL get_environment_variable("GRIDDESC",griddesc)
+      CALL get_environment_variable("GRIDNAME",gridname)
       WRITE (*,*) TRIM(infile)
       WRITE (*,*) TRIM(outfile)
       WRITE (*,*) TRIM(griddesc)
       print*,"infile###############",infile
 
-      log_stat = DSCGRID( 'CRO_BCND04', GDNAM3D, GDTYP3D, P_ALP3D, &
+      log_stat = DSCGRID( gridname, GDNAM3D, GDTYP3D, P_ALP3D, &
      &     P_BET3D, P_GAM3D, XCENT3D, YCENT3D, XORIG3D, YORIG3D, &
      &     XCELL3D , YCELL3D, NCOLS3D, NROWS3D, NTHIK3D)
 
@@ -139,9 +143,9 @@
 
 ! attempt to open the I/O api file. Create one if it does not exist
       print*, 'Attempting to open file...'
-      if(.not.OPEN3('OUTPUT',FSRDWR3,'wrf_to_ioapi')) then ! output file does not exit
+      if(.not.OPEN3('OUTPUT',FSRDWR3,'wrf_to_topo')) then ! output file does not exit
          print*, 'File does not exist, attempting file creation...'
-         if(.not.OPEN3('OUTPUT',FSCREA3,'wrf_to_ioapi')) then ! FSCREA3 FSUNKN3
+         if(.not.OPEN3('OUTPUT',FSCREA3,'wrf_to_topo')) then ! FSCREA3 FSUNKN3
             print*, 'Error opening output file'
             stop
          endif
@@ -198,4 +202,4 @@
          stop "Stopped"
       end if
       end subroutine check
-      end program wrf_to_ioapi
+      end program wrf_to_topo
